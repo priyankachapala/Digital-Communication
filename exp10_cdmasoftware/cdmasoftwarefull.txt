@@ -1,0 +1,257 @@
+%PN Sequence
+
+function [pnseq] = pnsq(G,m) S = [1 zeros(1,m-1)];
+
+N = 2^m-1; pnseq = []; for i=1:3*N
+
+pnseq = [pnseq S(1)];
+
+k = mod( sum(S.*G(1:m)),2);
+
+S = circshift(S',-1)';%circular left shift S(m) = k;
+
+end
+
+pnseq = 2*pnseq-1; end
+
+%Correlation
+
+function [corr] = cor(C1,C2) C1 = [C1 C1];
+
+corr = [];
+
+N = length(C2); for i=1:N
+
+corr = [corr sum( C1(i:N+i-1).*C2 )/N];
+
+end stem(corr);
+
+%Gold codes clc;
+
+clear all; m = [5 6];
+
+G = [1 0 0 1 0 1 0 1 1 1 1 0 1 0; 1 0 0 0 0 1 1 1 1 0 0 1 1 1];
+
+for i=1:length(m)
+
+C11 = (pnsq(G(i,1:7),m(i))==1);
+
+C12 = []; k = 3;
+
+V11 = [C11 C11 C11 C11 C11]; for j=1:3*(2^m(i)-1)
+
+C12 = [C12 V11(k)]; k = k+5;
+
+end
+
+X1 = 2*xor(C11,circshift(C12',1)')-1;
+
+X2 = 2*xor(C11,circshift(C12',2)')-1; figure;
+ 
+ 
+subplot(211);
+
+cor(X1,X1);
+
+title(['Auto-correlation of ',num2str(2^m(i)-1),' length goldcode']); subplot(212);
+
+cor(X1,X2);
+
+title(['Cross-correlation of ',num2str(2^m(i)-1),' length goldcode']);
+
+end
+
+%Hadamard codes clc;
+
+clear all; N=32;
+
+H32 = ones(N); k = N/2; while k>=1
+
+for i=1:N/k for j=1:N/k
+
+if mod(i,2)+mod(j,2)==0 H32((i-1)*k+1:i*k,(j-1)*k+1:j*k)=~H32((i-1)*k+1:i*k,(j-1)*k+1:j*k);
+
+end
+
+end
+
+end k=k/2;
+
+end
+
+H32 = 2*H32-1; N=64;
+
+H64 = ones(N); k = N/2; while k>=1
+
+for i=1:N/k for j=1:N/k
+
+if mod(i,2)+mod(j,2)==0 H64((i-1)*k+1:i*k,(j-1)*k+1:j*k)=~H64((i-1)*k+1:i*k,(j-1)*k+1:j*k);
+
+end
+
+end
+
+end k=k/2;
+
+end
+
+H64 = 2*H64-1; figure; subplot(211);
+
+cor([H32(3,:) H32(3,:) H32(3,:) H32(3,:)],[H32(3,:) H32(3,:) H32(3,:) H32(3,:)]); title('Auto-correlation of 32 length Walsh-Hadamard code');
+
+subplot(212);
+
+cor([H32(3,:) H32(3,:) H32(3,:) H32(3,:)],[H32(15,:) H32(15,:) H32(15,:) H32(15,:)]); title('Cross-correlation of 32 length Walsh-Hadamard code');
+
+figure;
+
+subplot(211);
+
+cor(H64(8,:),H64(8,:));
+
+title('Auto-correlation of 64 length Walsh-Hadamard code'); subplot(212);
+
+cor(H64(8,:),H64(15,:));
+
+title('cross-correlation of 64 length Walsh-Hadamard code');
+
+%main code
+ clc;
+ 
+
+
+
+ 
+close all; m = [4 5 6];
+
+G = [1 0 0 1 1 0 0 1 1 0 0 1 0 0; 1 0 0 1 0 1 0 1 1 1 1 0 1 0; 1 0 0 0 0 1 1 1 1 0 0 1 1 1];
+
+for i=1:3
+
+C1 = pnsq(G(i,1:7),m(i));
+
+C2 = pnsq(G(i,8:14),m(i)); figure;
+
+subplot(211)
+
+cor(C1,C1);
+
+title(['Auto-correlation of ',num2str(2^m(i)-1),'-sequence']); subplot(212)
+
+cor(C1,C2);
+
+title(['Cross-correlation of ',num2str(2^m(i)-1),'-sequence']);
+
+end goldcodes; hadam;
+
+%BPSK modulation clear all; N=1024;
+
+s1= rand(1,N)>0.5; ip1=2*s1-1; t=0:0.00001:0.001; c1= sin (2* pi* 1 *t); c=c1/norm(c1); ebyn0db=0:14;
+
+ebyn0=10.^(ebyn0db/10);
+
+PSK1=ip1'*c; %msequence length=31 nBits=5;MLS5=[];
+
+weights = [zeros(1, nBits - 1), 1]; for i = 1 : 2^nBits - 1
+
+MLS5(i, :) = weights;
+
+tapVal = rem((weights(5) + weights(2)), 2); weights = circshift(weights, [0 1]); weights(1) = tapVal;
+
+end
+
+%msequence length=63 nBits=6;MLS6=[];
+
+weights = [zeros(1, nBits - 1), 1]; for i = 1 : 2^nBits - 1
+
+MLS6(i, :) = weights;
+
+tapVal = rem((weights(6) + weights(1)), 2); weights = circshift(weights, [0 1]); weights(1) = tapVal;
+
+end
+
+for n=1:2 if n==1
+
+l=31;pn=2*MLS5(:,5)'-1;
+
+else
+
+l=63;pn=2*MLS6(:,6)'-1;
+
+end ip=[];
+
+for i=1:length(s1)
+ 
+
+
+
+ 
+temp=ip1(i)*pn; ip=[ip temp];
+
+end PSK=ip'*c;
+
+% AWGN channel
+
+n1 = randn(length(ip),length(t));
+
+n11 = randn(length(ip1),length(t)); BER = []; BERn=[];
+
+for k = 1:length(ebyn0db) n0 = l/ebyn0(k); n01=1/ebyn0(k);
+
+rcv1=PSK+sqrt(n0/2)*n1; rcv1_1=PSK1+sqrt(n01/2)*n11; rcv=rcv1*c';
+
+rcv=rcv'; rcv_1=rcv1_1*c'; rcv_1=rcv_1'; rx=[];
+
+for i=1:length(rcv)/l
+
+d= sum(rcv(l*(i-1)+1:l*(i-1)+l).*pn)/l; rx=[rx d];
+
+end
+
+y= rx > 0; err=xor(y,s1); BER(k)=mean(err); y=rcv_1>0; err=xor(y,s1); BERn(k)=mean(err);
+
+end
+
+thber = 0.5*erfc(sqrt(10.^(ebyn0db/10)));
+
+%Rayleigh channel
+
+n2 = randn(length(ip),length(t))+1i*randn(length(ip),length(t));
+
+n21 = randn(length(ip1),length(t))+1i*randn(length(ip1),length(t)); BERr=[]; BERrn=[];
+
+for k = 1:length(ebyn0db) n0 = l/ebyn0(k); n01=1/ebyn0(k);
+
+rcv11=n2.*PSK+sqrt(n0/2)*n1; rcv11_1=n21.*PSK1+sqrt(n01/2)*n11; rcv1=rcv11./n2;
+
+rcv=rcv1*c';
+
+rcv=rcv'; rcv1_1=rcv11_1./n21; rcv_1=rcv1_1*c'; rcv_1=rcv_1'; rx=[];
+
+for i=1:length(rcv)/l
+
+d= sum(rcv(l*(i-1)+1:l*(i-1)+l).*pn)/l; rx=[rx d];
+
+end
+
+y= rx > 0; err=xor(y,s1); BERr(k)=mean(err); y=rcv_1>0;
+ 
+
+
+
+ 
+err=xor(y,s1);
+
+BERrn(k)=mean(err);
+
+end
+
+thray = 0.5.*(1-sqrt(ebyn0./(ebyn0+1))); figure; semilogy(ebyn0db,thber,'b-');hold on; semilogy(ebyn0db,BER,'rx-');hold on; semilogy(ebyn0db,BERn,'g.-');hold on; semilogy(ebyn0db,thray,'b-');hold on; semilogy(ebyn0db,BERr,'rx-');grid on; semilogy(ebyn0db,BERrn,'g.-');grid on;
+
+legend('theory-AWGN', 'simulation-AWGN with Spreading','simulation-AWGN without Spreading','theory-Ray xlabel('Eb/No, dB');
+
+ylabel('Bit Error Rate');
+
+str=sprintf('Bit error probability curve for BPSK modulation for m-sequence length=%d',l); title(str);
+
+end
